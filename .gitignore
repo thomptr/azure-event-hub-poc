@@ -1,7 +1,33 @@
-# Compiled class file
+# =============================================================================
+# Sensitive Files - NEVER COMMIT
+# =============================================================================
+
+# Azure deployment parameters with secrets
+azure/parameters.json
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Generated Helm values with secrets
+helm/generated-values.yaml
+helm/*-secrets.yaml
+**/secrets.yaml
+**/secret-values.yaml
+
+# Kubernetes secrets
+k8s/secrets/
+*.secret.yaml
+
+# =============================================================================
+# Java/Maven
+# =============================================================================
+
+# Compiled class files
 *.class
 
-# Log file
+# Log files
 *.log
 
 # BlueJ files
@@ -10,7 +36,7 @@
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
-# Package Files #
+# Package Files
 *.jar
 *.war
 *.nar
@@ -19,6 +45,63 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# Virtual machine crash logs
 hs_err_pid*
 replay_pid*
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# =============================================================================
+# IDE
+# =============================================================================
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# =============================================================================
+# OS Files
+# =============================================================================
+
+.DS_Store
+Thumbs.db
+
+# =============================================================================
+# Docker
+# =============================================================================
+
+# WireMock recorded mappings (may contain request data)
+apps/test-api/wiremock/__files/
+apps/test-api/wiremock/mappings/*.json
+!apps/test-api/wiremock/mappings/.gitkeep
+
+# =============================================================================
+# Misc
+# =============================================================================
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+
+# Local test databases
+*.db
+*.sqlite

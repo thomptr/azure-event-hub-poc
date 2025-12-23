@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "test-consumer.fullname" . }}
+  labels:
+    {{- include "test-consumer.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "test-consumer.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "test-consumer.selectorLabels" . | nindent 8 }}
+        azure.workload.identity/use: "true"
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "test-consumer.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          env:
+            # Spring profile
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.config.profile | quote }}
+            
+            # Kafka / Event Hub configuration
+            - name: KAFKA_TOPIC
+              value: {{ .Values.config.kafka.topic | quote }}
+            - name: KAFKA_TOPIC_DLQ
+              value: {{ .Values.config.kafka.topicDlq | quote }}
+            - name: KAFKA_TOPIC_ERROR
+              value: {{ .Values.config.kafka.topicError | quote }}
+            - name: EVENTHUB_CONSUMER_GROUP
+              value: {{ .Values.config.kafka.consumerGroup | quote }}
+            - name: EVENTHUB_NAMESPACE
+              value: {{ .Values.config.eventHub.namespace | quote }}
+            - name: EVENTHUB_NAME
+              value: {{ .Values.config.kafka.topic | quote }}
+            - name: EVENTHUB_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "test-consumer.secretName" . }}
+                  key: event-hub-connection-string
+            
+            # Test API configuration
+            - name: TEST_API_URL
+              value: {{ .Values.config.testApi.url | quote }}
+            - name: TEST_API_RETRY_MAX
+              value: {{ .Values.config.testApi.retryMax | quote }}
+            - name: TEST_API_RETRY_DELAY
+              value: {{ .Values.config.testApi.retryDelay | quote }}
+            
+            # SQL Server configuration
+            - name: SQL_SERVER_HOST
+              value: {{ .Values.config.database.host | quote }}
+            - name: SQL_DATABASE_NAME
+              value: {{ .Values.config.database.name | quote }}
+            - name: SQL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "test-consumer.secretName" . }}
+                  key: sql-username
+            - name: SQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "test-consumer.secretName" . }}
+                  key: sql-password
+            
+            {{- if .Values.dynatrace.enabled }}
+            # Dynatrace configuration
+            - name: DYNATRACE_ENABLED
+              value: "true"
+            - name: DYNATRACE_URI
+              value: {{ .Values.dynatrace.uri | quote }}
+            - name: DYNATRACE_API_TOKEN
+              value: {{ .Values.dynatrace.apiToken | quote }}
+            {{- end }}
+            
+            {{- if .Values.opentelemetry.enabled }}
+            # OpenTelemetry configuration
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.opentelemetry.endpoint | quote }}
+            {{- end }}
+            
+            {{- if .Values.applicationInsights.enabled }}
+            # Azure Application Insights
+            - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+              value: {{ .Values.applicationInsights.connectionString | quote }}
+            - name: OTEL_TRACES_EXPORTER
+              value: "none"
+            - name: OTEL_METRICS_EXPORTER
+              value: "none"
+            - name: OTEL_LOGS_EXPORTER
+              value: "none"
+            {{- end }}
+          
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+

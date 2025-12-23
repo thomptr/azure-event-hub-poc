@@ -1,0 +1,81 @@
+# Network Delay Experiment
+# Adds latency between test-consumer and test-api
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: test-api-network-delay
+  namespace: eventhub-poc
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - eventhub-poc
+    labelSelectors:
+      app.kubernetes.io/name: test-consumer
+  delay:
+    latency: "500ms"
+    correlation: "50"
+    jitter: "100ms"
+  # Target the test-api service
+  direction: to
+  target:
+    selector:
+      namespaces:
+        - eventhub-poc
+      labelSelectors:
+        app.kubernetes.io/name: test-api
+    mode: all
+  duration: "2m"
+---
+# Network Packet Loss
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: test-api-packet-loss
+  namespace: eventhub-poc
+spec:
+  action: loss
+  mode: all
+  selector:
+    namespaces:
+      - eventhub-poc
+    labelSelectors:
+      app.kubernetes.io/name: test-consumer
+  loss:
+    loss: "25"
+    correlation: "50"
+  direction: to
+  target:
+    selector:
+      namespaces:
+        - eventhub-poc
+      labelSelectors:
+        app.kubernetes.io/name: test-api
+    mode: all
+  duration: "1m"
+---
+# Network Partition (complete disconnection)
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: test-api-partition
+  namespace: eventhub-poc
+spec:
+  action: partition
+  mode: all
+  selector:
+    namespaces:
+      - eventhub-poc
+    labelSelectors:
+      app.kubernetes.io/name: test-consumer
+  direction: both
+  target:
+    selector:
+      namespaces:
+        - eventhub-poc
+      labelSelectors:
+        app.kubernetes.io/name: test-api
+    mode: all
+  duration: "30s"
+

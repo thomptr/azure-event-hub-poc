@@ -1,0 +1,18 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: api-network-latency
+  namespace: eventhub-poc-api
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - eventhub-poc-api
+    labelSelectors:
+      app.kubernetes.io/name: test-api
+  delay:
+    latency: "45000ms"
+    jitter: "100ms"
+    correlation: "50"
+  duration: "60s"

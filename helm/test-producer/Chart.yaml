@@ -1,0 +1,7 @@
+apiVersion: v2
+name: test-producer
+description: Kafka message producer for Azure Event Hub POC
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+

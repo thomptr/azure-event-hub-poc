@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  test-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: test-api
+    ports:
+      - "8089:8089"
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8089/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  wiremock:
+    image: wiremock/wiremock:3.3.1
+    container_name: wiremock
+    ports:
+      - "8091:8080"      # WireMock API/stub port
+      - "8443:8443"      # WireMock HTTPS port (optional)
+    volumes:
+      - ./wiremock/mappings:/home/wiremock/mappings
+      - ./wiremock/__files:/home/wiremock/__files
+      - ./wiremock/recordings:/home/wiremock/recordings
+    command:
+      - --verbose
+      - --global-response-templating
+      - --record-mappings
+      - --proxy-all=http://test-api:8089
+    networks:
+      - test-network
+    depends_on:
+      test-api:
+        condition: service_healthy
+
+networks:
+  test-network:
+    driver: bridge
+

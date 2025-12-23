@@ -1,0 +1,52 @@
+# Pod Failure Experiment
+# Kills test-consumer pods to test resilience and message reprocessing
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: test-consumer-pod-failure
+  namespace: eventhub-poc
+spec:
+  action: pod-kill
+  mode: one  # Kill one pod at a time
+  selector:
+    namespaces:
+      - eventhub-poc
+    labelSelectors:
+      app.kubernetes.io/name: test-consumer
+  # Schedule: Run every 5 minutes for 30 seconds
+  # duration: "30s"
+  # scheduler:
+  #   cron: "*/5 * * * *"
+---
+# Pod Failure for test-api
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: test-api-pod-failure
+  namespace: eventhub-poc
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces:
+      - eventhub-poc
+    labelSelectors:
+      app.kubernetes.io/name: test-api
+---
+# Container Kill (more targeted than pod kill)
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: test-consumer-container-kill
+  namespace: eventhub-poc
+spec:
+  action: container-kill
+  mode: one
+  containerNames:
+    - test-consumer
+  selector:
+    namespaces:
+      - eventhub-poc
+    labelSelectors:
+      app.kubernetes.io/name: test-consumer
+

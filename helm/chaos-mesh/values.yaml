@@ -1,0 +1,85 @@
+# Chaos Mesh values for AKS deployment
+# Reference: https://chaos-mesh.org/docs/production-installation-using-helm/
+
+# Controller Manager configuration
+controllerManager:
+  replicaCount: 3
+  # Enable leader election for HA
+  leaderElection:
+    enabled: true
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1024Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+# Chaos Daemon configuration (runs on each node)
+chaosDaemon:
+  # For AKS with containerd runtime
+  runtime: containerd
+  socketPath: /run/containerd/containerd.sock
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1024Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+# Dashboard configuration
+dashboard:
+  # Enable the dashboard
+  enabled: true
+  # Security mode (set to false only for dev/test)
+  securityMode: true
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  # Ingress for dashboard (optional)
+  ingress:
+    enabled: false
+    # className: azure/application-gateway
+    # hosts:
+    #   - name: chaos-dashboard.example.com
+    #     paths:
+    #       - /
+
+# DNS Server configuration
+dnsServer:
+  enabled: true
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Prometheus metrics
+prometheus:
+  enabled: false
+  # serviceMonitor:
+  #   enabled: true
+
+# RBAC configuration
+rbac:
+  create: true
+
+# Namespace scoped installation (false = cluster-wide)
+clusterScoped: true
+
+# Target namespaces for experiments (empty = all namespaces)
+# targetNamespace: eventhub-poc
+
+# Webhook configuration
+webhook:
+  failurePolicy: Fail
+  timeoutSeconds: 5
+

@@ -1,0 +1,63 @@
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: consumer-network-latency
+  namespace: eventhub-poc-consumer
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - eventhub-poc-consumer
+    labelSelectors:
+      app.kubernetes.io/name: test-consumer
+  delay:
+    latency: "500ms"
+    jitter: "100ms"
+    correlation: "50"
+  duration: "60s"
+---
+# Network partition between consumer and api
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: consumer-api-partition
+  namespace: eventhub-poc-consumer
+spec:
+  action: partition
+  mode: all
+  selector:
+    namespaces:
+      - eventhub-poc-consumer
+    labelSelectors:
+      app.kubernetes.io/name: test-consumer
+  direction: to
+  target:
+    selector:
+      namespaces:
+        - eventhub-poc-api
+      labelSelectors:
+        app.kubernetes.io/name: test-api
+    mode: all
+  duration: "30s"
+---
+# Packet loss
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: api-packet-loss
+  namespace: eventhub-poc-api
+spec:
+  action: loss
+  mode: all
+  selector:
+    namespaces:
+      - eventhub-poc-api
+    labelSelectors:
+      app.kubernetes.io/name: test-api
+  loss:
+    loss: "25"
+    correlation: "50"
+  duration: "60s"
+

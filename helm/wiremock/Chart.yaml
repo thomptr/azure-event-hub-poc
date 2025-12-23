@@ -1,0 +1,7 @@
+apiVersion: v2
+name: wiremock
+description: A Helm chart for WireMock API mocking server
+type: application
+version: 0.1.0
+appVersion: "3.3.1"
+

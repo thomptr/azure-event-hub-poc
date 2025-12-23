@@ -1,0 +1,64 @@
+replicaCount: 1
+
+image:
+  repository: eventhubpocacr.azurecr.io/test-producer
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8087"
+  prometheus.io/path: "/actuator/prometheus"
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8087
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Producer configuration
+config:
+  eventHub:
+    namespace: ""  # e.g., myappeventhubns.servicebus.windows.net:9093
+  kafka:
+    topic: "myapp-eventhub"
+  producer:
+    messagesPerSecond: 100
+    autoStart: false
+
+# Secrets - these should be set via --set or external secrets
+secrets:
+  eventHubConnectionString: ""
+
+# Application Insights
+applicationInsights:
+  connectionString: ""
+
+# Spring profile
+springProfile: azure
+

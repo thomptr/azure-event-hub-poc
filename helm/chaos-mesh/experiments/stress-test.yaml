@@ -1,0 +1,61 @@
+# Stress Test Experiments
+# Apply CPU and memory pressure to test resource limits
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: test-consumer-cpu-stress
+  namespace: eventhub-poc
+spec:
+  mode: all
+  selector:
+    namespaces:
+      - eventhub-poc
+    labelSelectors:
+      app.kubernetes.io/name: test-consumer
+  stressors:
+    cpu:
+      workers: 2
+      load: 80  # 80% CPU load
+  duration: "2m"
+---
+# Memory Stress
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: test-consumer-memory-stress
+  namespace: eventhub-poc
+spec:
+  mode: all
+  selector:
+    namespaces:
+      - eventhub-poc
+    labelSelectors:
+      app.kubernetes.io/name: test-consumer
+  stressors:
+    memory:
+      workers: 2
+      size: "256MB"
+  duration: "1m"
+---
+# Combined CPU and Memory stress on test-api
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: test-api-stress
+  namespace: eventhub-poc
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - eventhub-poc
+    labelSelectors:
+      app.kubernetes.io/name: test-api
+  stressors:
+    cpu:
+      workers: 1
+      load: 50
+    memory:
+      workers: 1
+      size: "128MB"
+  duration: "3m"
+

@@ -1,0 +1,46 @@
+# =============================================================================
+# Environment Variables Example
+# =============================================================================
+# Copy this file to .env and fill in your values.
+# The .env file is gitignored and will not be committed.
+# =============================================================================
+
+# Azure Resource Group
+RESOURCE_GROUP=eventhub-poc-rg
+
+# Kubernetes Namespace
+NAMESPACE=eventhub-poc
+
+# Resource Name Prefix (used in Bicep)
+NAME_PREFIX=myapp
+
+# =============================================================================
+# Sensitive Values - NEVER COMMIT ACTUAL VALUES
+# =============================================================================
+
+# Your home router public IP address (for firewall rules)
+# Find at: https://whatismyipaddress.com/
+ALLOWED_IP=xxx.xxx.xxx.xxx
+
+# SSH Public Key for AKS nodes
+# Generate: ssh-keygen -t rsa -b 4096 -f ~/.ssh/aks_key
+SSH_PUBLIC_KEY="ssh-rsa AAAA... your-email@example.com"
+
+# SQL Server Credentials
+SQL_ADMIN_LOGIN=sqladmin
+SQL_ADMIN_PASSWORD=REPLACE-WITH-STRONG-PASSWORD
+
+# Event Hub Connection String (retrieved after deployment)
+EVENT_HUB_CONNECTION_STRING=
+
+# =============================================================================
+# Optional: Monitoring
+# =============================================================================
+
+# Dynatrace
+DYNATRACE_URI=
+DYNATRACE_API_TOKEN=
+
+# OpenTelemetry Collector Endpoint
+OTEL_ENDPOINT=http://otel-collector:4318
+

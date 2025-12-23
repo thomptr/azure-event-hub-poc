@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "wiremock.fullname" . }}-mappings
+  labels:
+    {{- include "wiremock.labels" . | nindent 4 }}
+data:
+  {{- range $index, $mapping := .Values.mappings.errorScenarios }}
+  error-{{ $index }}.json: |
+    {
+      "request": {{ $mapping.request | toJson }},
+      "response": {{ $mapping.response | toJson }}
+    }
+  {{- end }}
+

@@ -1,0 +1,126 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: test-consumer
+
+  # Database Configuration (H2 for local development)
+  datasource:
+    url: ${DATABASE_URL:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    username: ${DATABASE_USERNAME:sa}
+    password: ${DATABASE_PASSWORD:}
+    driver-class-name: ${DATABASE_DRIVER:org.h2.Driver}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: ${JPA_SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: ${HIBERNATE_DIALECT:org.hibernate.dialect.H2Dialect}
+
+  # H2 Console (for local development)
+  h2:
+    console:
+      enabled: ${H2_CONSOLE_ENABLED:true}
+      path: /h2-console
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP:test-consumer-group}
+      auto-offset-reset: earliest
+      enable-auto-commit: true
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+    # Azure Event Hub settings (uncomment for Azure)
+    # properties:
+    #   security.protocol: SASL_SSL
+    #   sasl.mechanism: PLAIN
+    #   sasl.jaas.config: >
+    #     org.apache.kafka.common.security.plain.PlainLoginModule required
+    #     username="$ConnectionString"
+    #     password="${EVENTHUB_CONNECTION_STRING}";
+
+# Kafka Topic Configuration
+kafka:
+  topic:
+    accounts: ${KAFKA_TOPIC:accounts}
+    dlq: ${KAFKA_TOPIC_DLQ:accounts-dlq}
+    error: ${KAFKA_TOPIC_ERROR:accounts-error}
+  # Error Handler Configuration (exponential backoff retries)
+  error-handler:
+    max-retries: ${KAFKA_ERROR_HANDLER_MAX_RETRIES:3}
+    initial-interval-ms: ${KAFKA_ERROR_HANDLER_INITIAL_INTERVAL:1000}
+    multiplier: ${KAFKA_ERROR_HANDLER_MULTIPLIER:2.0}
+    max-interval-ms: ${KAFKA_ERROR_HANDLER_MAX_INTERVAL:10000}
+
+# Test API Configuration
+api:
+  test-api:
+    base-url: ${TEST_API_URL:http://localhost:8089}
+    timeout:
+      connect: 5000
+      read: 10000
+      write: 10000
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+# Dynatrace Configuration
+management.dynatrace:
+  metrics:
+    export:
+      enabled: ${DYNATRACE_ENABLED:false}
+      uri: ${DYNATRACE_URI:}
+      api-token: ${DYNATRACE_API_TOKEN:}
+      v2:
+        metric-key-prefix: custom.kafka.consumer
+
+# OpenTelemetry Configuration
+otel:
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318}
+  resource:
+    attributes:
+      service.name: ${spring.application.name}
+      service.namespace: eventhub-poc-consumer
+      deployment.environment: ${ENVIRONMENT:local}
+
+# Logging Configuration
+logging:
+  level:
+    com.example.testconsumer: DEBUG
+    org.apache.kafka: INFO
+    org.springframework.kafka: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [traceId=%X{traceId:-} spanId=%X{spanId:-}] %-5level %logger{36} - %msg%n"
+

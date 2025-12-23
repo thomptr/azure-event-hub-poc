@@ -1,0 +1,49 @@
+# Azure Configuration Profile
+# Use this profile when connecting to Azure services
+# Run with: --spring.profiles.active=azure
+
+spring:
+  # Azure SQL Database Configuration
+  datasource:
+    url: jdbc:sqlserver://${SQL_SERVER_HOST}:1433;database=${SQL_DATABASE_NAME};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
+    username: ${SQL_USERNAME}
+    password: ${SQL_PASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.SQLServerDialect
+
+  # Disable H2 console in Azure
+  h2:
+    console:
+      enabled: false
+
+  # Azure Event Hub Kafka Configuration
+  kafka:
+    bootstrap-servers: ${EVENTHUB_NAMESPACE}.servicebus.windows.net:9093
+    consumer:
+      group-id: ${EVENTHUB_CONSUMER_GROUP:test-consumer-group}
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: >
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="$ConnectionString"
+        password="${EVENTHUB_CONNECTION_STRING}";
+
+kafka:
+  topic:
+    accounts: ${EVENTHUB_NAME:myapp-eventhub}
+    dlq: ${EVENTHUB_NAME:myapp-eventhub}-dlq
+    error: ${EVENTHUB_NAME:myapp-eventhub}-error
+  # Error Handler Configuration (exponential backoff retries)
+  error-handler:
+    max-retries: ${KAFKA_ERROR_HANDLER_MAX_RETRIES:3}
+    initial-interval-ms: ${KAFKA_ERROR_HANDLER_INITIAL_INTERVAL:1000}
+    multiplier: ${KAFKA_ERROR_HANDLER_MULTIPLIER:2.0}
+    max-interval-ms: ${KAFKA_ERROR_HANDLER_MAX_INTERVAL:10000}

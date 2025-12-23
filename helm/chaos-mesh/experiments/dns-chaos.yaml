@@ -1,0 +1,38 @@
+# DNS Chaos Experiments
+# Simulate DNS resolution failures
+apiVersion: chaos-mesh.org/v1alpha1
+kind: DNSChaos
+metadata:
+  name: test-api-dns-error
+  namespace: eventhub-poc
+spec:
+  action: error
+  mode: all
+  selector:
+    namespaces:
+      - eventhub-poc
+    labelSelectors:
+      app.kubernetes.io/name: test-consumer
+  # Fail DNS lookups for test-api
+  patterns:
+    - "test-api*"
+  duration: "30s"
+---
+# DNS Random response (returns random IP)
+apiVersion: chaos-mesh.org/v1alpha1
+kind: DNSChaos
+metadata:
+  name: test-api-dns-random
+  namespace: eventhub-poc
+spec:
+  action: random
+  mode: all
+  selector:
+    namespaces:
+      - eventhub-poc
+    labelSelectors:
+      app.kubernetes.io/name: test-consumer
+  patterns:
+    - "test-api*"
+  duration: "30s"
+

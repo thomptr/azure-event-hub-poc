@@ -1,0 +1,139 @@
+# Default values for test-consumer
+
+replicaCount: 2
+
+image:
+  repository: eventhubpocacr.azurecr.io/test-consumer
+  pullPolicy: Always
+  tag: "latest"
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations:
+    azure.workload.identity/client-id: ""  # Set to your managed identity client ID
+  name: "test-consumer-sa"
+
+podAnnotations:
+  azure.workload.identity/use: "true"
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8088"
+  prometheus.io/path: "/actuator/prometheus"
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8088
+
+# No ingress needed for consumer (internal service)
+ingress:
+  enabled: false
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+# Liveness and Readiness probes
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: http
+  initialDelaySeconds: 45
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Application configuration
+config:
+  # Spring profile
+  profile: "azure"
+  
+  # Kafka / Event Hub configuration
+  kafka:
+    # Bicep output: eventHubName
+    topic: "myapp-eventhub"
+    topicDlq: "myapp-eventhub-dlq"
+    topicError: "myapp-eventhub-error"
+    # Bicep output: Use namePrefix + "-consumer-group"
+    consumerGroup: "test-consumer-group"
+  
+  # Event Hub configuration
+  eventHub:
+    # Bicep output: eventHubNamespaceName
+    namespace: ""
+    connectionString: ""  # Retrieved via: az eventhubs namespace authorization-rule keys list
+  
+  # Test API configuration
+  testApi:
+    # Use FQDN when test-api is in a different namespace
+    # Format: http://<service>.<namespace>.svc.cluster.local:<port>
+    url: "http://test-api.eventhub-poc-api.svc.cluster.local:8089"
+    retryMax: "3"
+    retryDelay: "1000"
+  
+  # SQL Server configuration
+  database:
+    # Bicep output: sqlServerFqdn
+    host: ""
+    # Bicep output: sqlDatabaseName
+    name: ""
+    # Bicep parameter: sqlAdminLogin
+    username: ""
+    # Bicep parameter: sqlAdminPassword
+    password: ""
+
+# External secrets (create separately or use Azure Key Vault)
+secrets:
+  # If true, expects a secret named {{ .Release.Name }}-secrets to exist
+  useExisting: false
+  # If useExisting is false, these values will be used to create the secret
+  eventHubConnectionString: ""
+  sqlUsername: ""
+  sqlPassword: ""
+
+# Dynatrace configuration
+dynatrace:
+  enabled: false
+  uri: ""
+  apiToken: ""
+
+# OpenTelemetry configuration
+opentelemetry:
+  enabled: false
+  endpoint: "http://otel-collector:4318"
+
+# Azure Application Insights
+applicationInsights:
+  enabled: true
+  connectionString: ""  # Set via --set or from Bicep output
+

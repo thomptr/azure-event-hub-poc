@@ -1,0 +1,240 @@
+# Default values for wiremock
+
+replicaCount: 1
+
+image:
+  repository: wiremock/wiremock
+  pullPolicy: IfNotPresent
+  tag: "3.3.1"
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: "wiremock-sa"
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8080
+  httpsPort: 8443
+
+# Enable ingress to access WireMock from outside cluster
+ingress:
+  enabled: false
+  className: azure/application-gateway
+  annotations:
+    appgw.ingress.kubernetes.io/backend-path-prefix: "/"
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+# Liveness and Readiness probes
+livenessProbe:
+  httpGet:
+    path: /__admin/health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /__admin/health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# WireMock configuration
+wiremock:
+  # Enable verbose logging
+  verbose: true
+  # Enable response templating
+  globalResponseTemplating: true
+  # Enable recording mode (proxies to target and records)
+  recording:
+    enabled: false
+    targetUrl: ""
+  # Proxy all unmatched requests to a target
+  proxy:
+    enabled: false
+    targetUrl: ""
+
+# Persistent volume for mappings
+persistence:
+  enabled: false
+  storageClass: ""
+  size: 1Gi
+  accessModes:
+    - ReadWriteOnce
+
+# ConfigMap for static mappings
+mappings:
+  # Example error scenarios
+  errorScenarios:
+    # 400 Bad Request
+    - request:
+        method: POST
+        urlPattern: /api/accounts/error/400
+      response:
+        status: 400
+        headers:
+          Content-Type: application/json
+        jsonBody:
+          error: "Bad Request"
+          message: "Invalid account data provided"
+    
+    # 401 Unauthorized
+    - request:
+        method: POST
+        urlPattern: /api/accounts/error/401
+      response:
+        status: 401
+        headers:
+          Content-Type: application/json
+        jsonBody:
+          error: "Unauthorized"
+          message: "Authentication required"
+    
+    # 403 Forbidden
+    - request:
+        method: POST
+        urlPattern: /api/accounts/error/403
+      response:
+        status: 403
+        headers:
+          Content-Type: application/json
+        jsonBody:
+          error: "Forbidden"
+          message: "Access denied"
+    
+    # 404 Not Found
+    - request:
+        method: POST
+        urlPattern: /api/accounts/error/404
+      response:
+        status: 404
+        headers:
+          Content-Type: application/json
+        jsonBody:
+          error: "Not Found"
+          message: "Account not found"
+    
+    # 429 Too Many Requests
+    - request:
+        method: POST
+        urlPattern: /api/accounts/error/429
+      response:
+        status: 429
+        headers:
+          Content-Type: application/json
+          Retry-After: "60"
+        jsonBody:
+          error: "Too Many Requests"
+          message: "Rate limit exceeded. Try again later."
+    
+    # 500 Internal Server Error
+    - request:
+        method: POST
+        urlPattern: /api/accounts/error/500
+      response:
+        status: 500
+        headers:
+          Content-Type: application/json
+        jsonBody:
+          error: "Internal Server Error"
+          message: "An unexpected error occurred"
+    
+    # 502 Bad Gateway
+    - request:
+        method: POST
+        urlPattern: /api/accounts/error/502
+      response:
+        status: 502
+        headers:
+          Content-Type: application/json
+        jsonBody:
+          error: "Bad Gateway"
+          message: "Upstream service unavailable"
+    
+    # 503 Service Unavailable
+    - request:
+        method: POST
+        urlPattern: /api/accounts/error/503
+      response:
+        status: 503
+        headers:
+          Content-Type: application/json
+          Retry-After: "30"
+        jsonBody:
+          error: "Service Unavailable"
+          message: "Service temporarily unavailable"
+    
+    # Delayed response (simulates slow API)
+    - request:
+        method: POST
+        urlPattern: /api/accounts/slow
+      response:
+        status: 200
+        fixedDelayMilliseconds: 5000
+        headers:
+          Content-Type: application/json
+        jsonBody:
+          firstName: "Slow"
+          lastName: "Response"
+          accountNumber: "0000000000"
+          accountAction: "DELAYED"
+          message: "This response was delayed by 5 seconds"
+    
+    # Random failure (50% chance)
+    - request:
+        method: POST
+        urlPattern: /api/accounts/flaky
+        bodyPatterns:
+          - matchesJsonPath: "$.firstName"
+      response:
+        status: 200
+        headers:
+          Content-Type: application/json
+        transformers:
+          - response-template
+        jsonBody:
+          firstName: "{{randomValue type='ALPHANUMERIC' length=8}}"
+          lastName: "{{randomValue type='ALPHANUMERIC' length=8}}"
+          accountNumber: "{{randomValue type='NUMERIC' length=10}}"
+          accountAction: "RANDOM"
+          message: "Random response generated"
+

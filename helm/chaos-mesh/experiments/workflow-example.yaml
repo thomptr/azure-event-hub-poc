@@ -1,0 +1,93 @@
+# Chaos Workflow Example
+# Orchestrates multiple chaos experiments in sequence
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Workflow
+metadata:
+  name: test-api-resilience-workflow
+  namespace: eventhub-poc
+spec:
+  entry: entry
+  templates:
+    # Entry point - run steps in sequence
+    - name: entry
+      templateType: Serial
+      deadline: "10m"
+      children:
+        - network-delay-phase
+        - recovery-phase-1
+        - http-fault-phase
+        - recovery-phase-2
+        - pod-kill-phase
+
+    # Phase 1: Network delay
+    - name: network-delay-phase
+      templateType: NetworkChaos
+      deadline: "2m"
+      networkChaos:
+        action: delay
+        mode: all
+        selector:
+          namespaces:
+            - eventhub-poc
+          labelSelectors:
+            app.kubernetes.io/name: test-consumer
+        delay:
+          latency: "300ms"
+          jitter: "50ms"
+        direction: to
+        target:
+          selector:
+            namespaces:
+              - eventhub-poc
+            labelSelectors:
+              app.kubernetes.io/name: test-api
+          mode: all
+
+    # Recovery period 1
+    - name: recovery-phase-1
+      templateType: Suspend
+      deadline: "30s"
+      suspend:
+        duration: "30s"
+
+    # Phase 2: HTTP fault injection
+    - name: http-fault-phase
+      templateType: HTTPChaos
+      deadline: "1m"
+      httpChaos:
+        mode: all
+        selector:
+          namespaces:
+            - eventhub-poc
+          labelSelectors:
+            app.kubernetes.io/name: test-api
+        target: Response
+        port: 8089
+        path: /api/accounts
+        method: POST
+        replace:
+          code: 503
+          body: '{"error": "Service Unavailable"}'
+          headers:
+            Content-Type: application/json
+
+    # Recovery period 2
+    - name: recovery-phase-2
+      templateType: Suspend
+      deadline: "30s"
+      suspend:
+        duration: "30s"
+
+    # Phase 3: Pod kill
+    - name: pod-kill-phase
+      templateType: PodChaos
+      deadline: "30s"
+      podChaos:
+        action: pod-kill
+        mode: one
+        selector:
+          namespaces:
+            - eventhub-poc
+          labelSelectors:
+            app.kubernetes.io/name: test-api
+

@@ -1,0 +1,21 @@
+spring:
+  kafka:
+    bootstrap-servers: ${EVENTHUB_NAMESPACE:myappeventhubns.servicebus.windows.net:9093}
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: >-
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="$ConnectionString"
+        password="${EVENTHUB_CONNECTION_STRING}";
+
+producer:
+  topic: ${KAFKA_TOPIC:myapp-eventhub}
+  messages-per-second: ${MESSAGES_PER_SECOND:100}
+  auto-start: ${AUTO_START:false}
+
+logging:
+  level:
+    com.example.testproducer: INFO
+    org.apache.kafka: WARN
+

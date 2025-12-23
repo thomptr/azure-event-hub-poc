@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "eastus"
+    },
+    "namePrefix": {
+      "value": "myapp"
+    },
+    "allowedIp": {
+      "value": "your-public-ip-address"
+    },
+    "sshRSAPublicKey": {
+      "value": "your-ssh-public-key-paste-here"
+    },
+    "linuxAdminUsername": {
+      "value": "azureuser"
+    },
+    "agentCount": {
+      "value": 2
+    },
+    "agentVMSize": {
+      "value": "Standard_B2ms"
+    },
+    "eventHubSku": {
+      "value": "Standard"
+    },
+    "eventHubPartitionCount": {
+      "value": 2
+    },
+    "eventHubRetentionDays": {
+      "value": 1
+    },
+    "sqlAdminLogin": {
+      "value": "sqladmin"
+    },
+    "sqlAdminPassword": {
+      "value": "REPLACE-WITH-STRONG-PASSWORD"
+    },
+    "grafanaAdminPrincipalId": {
+      "value": "your-azure-ad-object-id"
+    }
+  }
+}
